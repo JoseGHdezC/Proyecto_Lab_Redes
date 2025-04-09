@@ -215,7 +215,7 @@ def main() -> None:
         leaf_node = project.get_node(name=leaf_name)
 
         for j in range(server_node_number):
-            server_name = f"base_switch_{i * leaf_node_number + j + 1}"
+            server_name = f"base_switch_{i + 1}"
             server_node = project.get_node(name=server_name)
             try:
                 create_link_between_nodes(project, server, leaf_node, server_node, spine_node_number + j + 1, 2)
