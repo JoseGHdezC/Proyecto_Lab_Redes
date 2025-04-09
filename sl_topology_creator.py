@@ -6,27 +6,20 @@ def create_config_server(project, server) -> None:
     Crea un nodo de configuración en el servidor Ansible.
     """
     server_name = "Servidor_Ansible"
-    server_node = Node(project_id=project.project_id, name=server_name, template="VPCS",
+    server_node = Node(project_id=project.project_id, name=server_name, template="Server",
                 connector=server, x=0, y=0)
     server_node.create()
     server_node.update(name=server_name)
     
     switch_name = "manager_switch"
-    switch_node = Node(project_id=project.project_id, name=switch_name, template="Ethernet switch",
+    switch_node = Node(project_id=project.project_id, name=switch_name, template="FRR",
                 connector=server, x=0, y=50)
     switch_node.create()
     switch_node.update(name=switch_name)
     
+    project.get_nodes()
     # Crear el enlace entre el servidor Ansible y el switch
-    link = Link(
-        project_id=project.project_id,
-        connector=server,
-        nodes=[
-            {"node_id": server_node.node_id, "adapter_number": 0, "port_number": 0},
-            {"node_id": switch_node.node_id, "adapter_number": 0, "port_number": 0}
-        ]
-    )
-    link.create()
+    project.create_link(server_name, "eth0", switch_name, "eth0")
     
 def create_management_network(project, server) -> None:
     """
@@ -43,7 +36,7 @@ def create_management_network(project, server) -> None:
         new_switch = Node(
             project_id=project.project_id,
             name=switch_name,
-            template="Ethernet switch",
+            template="FRR",
             connector=server,
             x=0,
             y=50 + (index * 100)  # apila verticalmente los switches
@@ -94,15 +87,7 @@ def create_link_between_nodes(project, server, node1, node2, port1, port2) -> No
     """
     Crea un enlace entre dos nodos en el proyecto.
     """
-    link = Link(
-        project_id=project.project_id,
-        connector=server,
-        nodes=[
-            {"node_id": node1.node_id, "adapter_number": 0, "port_number": port1},
-            {"node_id": node2.node_id, "adapter_number": 0, "port_number": port2}
-        ]
-    )
-    link.create()
+    project.create_link(node1.name, f"eth{port1}", node2.name, f"eth{port2}")
     print(f"Enlace creado entre {node1.name} y {node2.name}")
 
 def main() -> None:
@@ -145,47 +130,38 @@ def main() -> None:
     if server_node_number <= 0:
         raise ValueError("El número de nodos servidor debe ser mayor que 0.")
 
-    # Crear nodos spine
-    for i in range(spine_node_number):   
+    # Create spine nodes
+    spine_nodes = []
+    for i in range(spine_node_number):
         name = f"spine_{i+1}"
-        node = Node(project_id=project.project_id, name=name, template="Ethernet switch",
-                    connector=server, x=100 + (i * 100), y=100)
+        node = Node(project_id=project.project_id, name=name, template="FRR",
+                connector=server, x=100 + (i * 100), y=100)
         node.create()
         node.update(name=name)
+        spine_nodes.append(node)
 
     print(f"Se han creado {spine_node_number} nodos spine.")
 
-    # Crear nodos leaf
+    # Create leaf nodes
+    leaf_nodes = []
+    server_nodes = []
     for i in range(leaf_node_number):
-        name = f"leaf_{i + 1}"
-        node = Node(project_id=project.project_id, name=name, template="Ethernet switch",
-                    connector=server, x=100 + (i * 100), y=200)
+        name = f"leaf_{i+1}"
+        node = Node(project_id=project.project_id, name=name, template="FRR",
+                connector=server, x=200 + (i * 100), y=200)
         node.create()
         node.update(name=name)
+        leaf_nodes.append(node)
 
         # Crear nodos servidor
         for j in range(server_node_number):
             server_name = f"server_{j + 1}"
-            server_node = Node(project_id=project.project_id, name=server_name, template="VPCS",
+            server_node = Node(project_id=project.project_id, name=server_name, template="Server",
                     connector=server, x=100 + (i * 100), y=300)
             server_node.create()
             server_node.update(name=server_name)
+            server_nodes.append(server_node)
             
-            base_name = f"base_switch_{i + 1}"
-            base_switch = Node(project_id=project.project_id, name=base_name, template="Ethernet switch",
-                    connector=server, x=100 + (i * 100), y=400)
-            base_switch.create()
-            base_switch.update(name=base_name)
-            # Crear el enlace entre el servidor y el switch base
-            link = Link(
-                project_id=project.project_id,
-                connector=server,
-                nodes=[
-                    {"node_id": server_node.node_id, "adapter_number": 0, "port_number": 0},
-                    {"node_id": base_switch.node_id, "adapter_number": 0, "port_number": 1}
-                ]
-            )
-            link.create()
 
     print(f"Se han creado {leaf_node_number} nodos leaf.")
 
@@ -194,8 +170,7 @@ def main() -> None:
     # Refrescar la lista de nodos del proyecto
     project.get_nodes()
     
-    create_management_network(project, server)  # Crear la red de gestión entre los nodos leaf y los servidores
-    
+    #create_management_network(project, server)  # Crear la red de gestión entre los nodos leaf y los servidores
     # Crear enlaces entre los nodos spine y leaf
     for i in range(spine_node_number):
         spine_name = f"spine_{i + 1}"
@@ -215,15 +190,30 @@ def main() -> None:
         leaf_node = project.get_node(name=leaf_name)
 
         for j in range(server_node_number):
-            server_name = f"base_switch_{i + 1}"
+            server_name = f"server_{i + 1}"
             server_node = project.get_node(name=server_name)
             try:
                 create_link_between_nodes(project, server, leaf_node, server_node, spine_node_number + j + 1, 2)
             except Exception as e:
                 print(f"Error al crear el enlace entre {leaf_name} y {server_name}: {e}")
         
-    # Refrescar la lista de enlaces en el proyecto
-    project.get_links()
+    project.nodes_summary(is_print=False)
+
+    # Asignar direcciones IP a las interfaces de los routers
+    for i in range(spine_node_number):
+        spine_name = f"spine_{i + 1}"
+        spine_node = project.get_node(name=spine_name)
+        spine_node.start()
+        spine_node.update()
+        spine_node.update()
+        
+    # Asignar direcciones IP a los nodos leaf
+    for i in range(leaf_node_number):
+        leaf_name = f"leaf_{i + 1}"
+        leaf_node = project.get_node(name=leaf_name)
+        leaf_node.start()
+        leaf_node.update()
+
     
 if __name__ == "__main__":
     main()
