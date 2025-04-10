@@ -59,3 +59,7 @@ project.create_link(name_spine, "eth1", name_leaf, "eth1")
 
 # Crear enlace entre leaf y servidor
 project.create_link(name_leaf, "eth2", name_server, "eth1")
+
+node_spine.start()
+node_leaf.start()
+
