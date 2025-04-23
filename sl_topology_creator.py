@@ -227,7 +227,7 @@ def main() -> None:
                 create_link_between_nodes(project, server, leaf_node, server_node, spine_node_number + j + 1, 1)
             except Exception as e:
                 print(f"Error al crear el enlace entre {leaf_name} y {server_name}: {e}")
-
+                
     connection_port = 0
     # Asignar direcciones IP a las interfaces de los routers
     for i in range(spine_node_number):
@@ -242,7 +242,7 @@ def main() -> None:
         asyncio.run(configure_router("localhost", 5000 + connection_port, f"lo", f"1.1.0.{i + 1}", "24"))
         for j in range(leaf_node_number):
             sleep(2)
-            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{i}.{host_number}", "24"))
+            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{i}.{host_number}", "30"))
             host_number += 4
         connection_port += 2
         
@@ -260,10 +260,10 @@ def main() -> None:
         asyncio.run(configure_router("localhost", 5000 + connection_port, f"lo", f"1.1.1.{i + 1}", "24"))
         for j in range(spine_node_number):
             sleep(2)
-            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{j}.{host_number}", "24"))
+            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{j}.{host_number}", "30"))
         host_number += 4
         connection_port += 2 * (server_node_number + 1)
-        
+       
     
 if __name__ == "__main__":
     main()
