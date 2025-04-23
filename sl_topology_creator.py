@@ -51,14 +51,16 @@ def create_config_server(project, server) -> None:
     server_node.update(name=server_name)
     
     switch_name = "manager_switch"
-    switch_node = Node(project_id=project.project_id, name=switch_name, template=ROUTER_TEMPLATE,
+    switch_node = Node(project_id=project.project_id, name=switch_name, template="Ethernet switch",
                 connector=server, x=0, y=50)
     switch_node.create()
     switch_node.update(name=switch_name)
     
     project.get_nodes()
+    
+    #print(switch_node)
     # Crear el enlace entre el servidor Ansible y el switch
-    project.create_link(server_name, "eth0", switch_name, "eth0")
+    project.create_link(server_name, "eth0", switch_name, "Ethernet0")
     
 def create_management_network(project, server) -> None:
     """
@@ -66,7 +68,7 @@ def create_management_network(project, server) -> None:
     conectándolos a switches de gestión. Si un switch se llena,
     se crea uno nuevo automáticamente.
     """
-    max_ports = 24  # Número máximo de puertos del switch
+    max_ports = 8  # Número máximo de puertos del switch
     switch_index = 1
     port_counter = 1
 
@@ -75,7 +77,7 @@ def create_management_network(project, server) -> None:
         new_switch = Node(
             project_id=project.project_id,
             name=switch_name,
-            template=ROUTER_TEMPLATE,
+            template="Ethernet switch",
             connector=server,
             x=0,
             y=50 + (index * 100)  # apila verticalmente los switches
@@ -84,7 +86,7 @@ def create_management_network(project, server) -> None:
         new_switch.update(name=switch_name)
         
         project.get_nodes()
-        project.create_link(new_switch.name, "eth0", management_node.name, "eth7")
+        project.create_link(new_switch.name, "Ethernet0", management_node.name, "Ethernet7")
         print(f"Switch de gestión creado: {switch_name}")
         return new_switch
 
@@ -106,7 +108,7 @@ def create_management_network(project, server) -> None:
             management_node = create_new_manager_switch(switch_index)
             port_counter = 1  # reiniciar para el nuevo switch
 
-        project.create_link(management_node.name, f"eth{port_counter}", aux_node.name, "eth0")
+        project.create_link(management_node.name, f"Ethernet{port_counter}", aux_node.name, "eth0")
         print(f"Enlace creado entre {management_node.name} (puerto {port_counter}) y {node_name}")
         port_counter += 1
 
