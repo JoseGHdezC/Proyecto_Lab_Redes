@@ -4,54 +4,54 @@ import telnetlib3
 import asyncio
 from time import sleep
 
-async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
-    """
-    Conecta al router vía Telnet y configura la interfaz indicada.
-    """
-    try:
-        reader, writer = await telnetlib3.open_connection(host, port)
-        # Enviar comandos al router
-        writer.write("vtysh\n")
-        await writer.drain()
-        writer.write("configure terminal\n")
-        await writer.drain()
-        writer.write(f"interface {interface}\n")
-        await writer.drain()
-        writer.write(f"ip address {ip_address}/{subnet_mask}\n")
-        await writer.drain()
-        writer.write("exit\n")
-        await writer.drain()
-        writer.write("exit\n")
-        await writer.drain()
-        writer.write("write\n")
-        await writer.drain()
-        writer.write("exit\n")
-        await writer.drain()
-            
-        # Leer la respuesta para confirmar que se aplicó la configuración
-        response = await reader.read(1024)
-        print("Respuesta recibida:", response)
-        
-        # Close the connection when done
-        writer.close()
-        sleep(1)
+#async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
+#    """
+#    Conecta al router vía Telnet y configura la interfaz indicada.
+#    """
+#    try:
+#        reader, writer = await telnetlib3.open_connection(host, port)
+#        # Enviar comandos al router
+#        writer.write("vtysh\n")
+#        await writer.drain()
+#        writer.write("configure terminal\n")
+#        await writer.drain()
+#        writer.write(f"interface {interface}\n")
+#        await writer.drain()
+#        writer.write(f"ip address {ip_address}/{subnet_mask}\n")
+#        await writer.drain()
+#        writer.write("exit\n")
+#        await writer.drain()
+#        writer.write("exit\n")
+#        await writer.drain()
+#        writer.write("write\n")
+#        await writer.drain()
+#        writer.write("exit\n")
+#        await writer.drain()
+#            
+#        # Leer la respuesta para confirmar que se aplicó la configuración
+#        response = await reader.read(1024)
+#        print("Respuesta recibida:", response)
+#        
+#        # Close the connection when done
+#        writer.close()
+#        sleep(1)#
 
-        print(f"Configuración aplicada a {interface}: {ip_address} {subnet_mask}")
-    except Exception as e:
-        print("Error durante la configuración:", e)
+#        print(f"Configuración aplicada a {interface}: {ip_address} {subnet_mask}")
+#    except Exception as e:
+#        print("Error durante la configuración:", e)
 
 def create_config_server(project, server) -> None:
     """
     Crea un nodo de configuración en el servidor Ansible.
     """
     server_name = "Servidor_Ansible"
-    server_node = Node(project_id=project.project_id, name=server_name, template="Server",
+    server_node = Node(project_id=project.project_id, name=server_name, template="Network Automation",
                 connector=server, x=0, y=0)
     server_node.create()
     server_node.update(name=server_name)
     
     switch_name = "manager_switch"
-    switch_node = Node(project_id=project.project_id, name=switch_name, template="FRR",
+    switch_node = Node(project_id=project.project_id, name=switch_name, template="FRR 8.2.2",
                 connector=server, x=0, y=50)
     switch_node.create()
     switch_node.update(name=switch_name)
@@ -66,7 +66,7 @@ def create_management_network(project, server) -> None:
     conectándolos a switches de gestión. Si un switch se llena,
     se crea uno nuevo automáticamente.
     """
-    max_ports = 24  # Número máximo de puertos del switch
+    max_ports = 8  # Número máximo de puertos del switch
     switch_index = 1
     port_counter = 1
 
@@ -75,7 +75,7 @@ def create_management_network(project, server) -> None:
         new_switch = Node(
             project_id=project.project_id,
             name=switch_name,
-            template="FRR",
+            template="FRR 8.2.2",
             connector=server,
             x=0,
             y=50 + (index * 100)  # apila verticalmente los switches
@@ -161,7 +161,7 @@ def main() -> None:
     spine_nodes = []
     for i in range(spine_node_number):
         name = f"spine_{i+1}"
-        node = Node(project_id=project.project_id, name=name, template="FRR",
+        node = Node(project_id=project.project_id, name=name, template="FRR 8.2.2",
                 connector=server, x=100 + (i * 100), y=100)
         node.create()
         node.update(name=name)
@@ -174,7 +174,7 @@ def main() -> None:
     server_nodes = []
     for i in range(leaf_node_number):
         name = f"leaf_{i+1}"
-        node = Node(project_id=project.project_id, name=name, template="FRR",
+        node = Node(project_id=project.project_id, name=name, template="FRR 8.2.2",
                 connector=server, x=200 + (i * 100), y=200)
         node.create()
         node.update(name=name)
@@ -183,7 +183,7 @@ def main() -> None:
         # Crear nodos servidor
         for j in range(server_node_number):
             server_name = f"server_{j + 1}"
-            server_node = Node(project_id=project.project_id, name=server_name, template="Server",
+            server_node = Node(project_id=project.project_id, name=server_name, template="FRR 8.2.2",
                     connector=server, x=100 + (i * 100), y=300)
             server_node.create()
             server_node.update(name=server_name)
@@ -197,7 +197,7 @@ def main() -> None:
     # Refrescar la lista de nodos del proyecto
     project.get_nodes()
     
-    #create_management_network(project, server)  # Crear la red de gestión entre los nodos leaf y los servidores
+    create_management_network(project, server)  # Crear la red de gestión entre los nodos leaf y los servidores
     
     # Crear enlaces entre los nodos spine y leaf
     for i in range(spine_node_number):
@@ -208,7 +208,7 @@ def main() -> None:
             leaf_name = f"leaf_{j + 1}"
             leaf_node = project.get_node(name=leaf_name)
             try:
-                create_link_between_nodes(project, server, spine_node, leaf_node, j + 1, i + 1)
+                create_link_between_nodes(project, spine_node, leaf_node, j + 1, i + 1)
             except Exception as e:
                 print(f"Error al crear el enlace entre {spine_name} y {leaf_name}: {e}")
         
@@ -224,45 +224,10 @@ def main() -> None:
                 server_name = f"server_{i + 1}"
             server_node = project.get_node(name=server_name)
             try:
-                create_link_between_nodes(project, server, leaf_node, server_node, spine_node_number + j + 1, 1)
+                create_link_between_nodes(project, leaf_node, server_node, spine_node_number + j + 1, 1)
             except Exception as e:
                 print(f"Error al crear el enlace entre {leaf_name} y {server_name}: {e}")
-                
-    connection_port = 0
-    # Asignar direcciones IP a las interfaces de los routers
-    for i in range(spine_node_number):
-        spine_name = f"spine_{i + 1}"
-        spine_node = project.get_node(name=spine_name)
-        spine_node.start()
-        spine_node.update()
-        spine_node.update()
-        
-        host_number = 1
-        spine_node.get()  # Updates the node data from the server
-        asyncio.run(configure_router("localhost", 5000 + connection_port, f"lo", f"1.1.0.{i + 1}", "24"))
-        for j in range(leaf_node_number):
-            sleep(2)
-            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{i}.{host_number}", "30"))
-            host_number += 4
-        connection_port += 2
-        
-    print(f"---------> {connection_port}")
-    
-    # Asignar direcciones IP a los nodos leaf
-    host_number = 2
-    for i in range(leaf_node_number):
-        leaf_name = f"leaf_{i + 1}"
-        leaf_node = project.get_node(name=leaf_name)
-        leaf_node.start()
-        leaf_node.update()
-        
-        leaf_node.get()
-        asyncio.run(configure_router("localhost", 5000 + connection_port, f"lo", f"1.1.1.{i + 1}", "24"))
-        for j in range(spine_node_number):
-            sleep(2)
-            asyncio.run(configure_router("localhost", 5000 + connection_port, f"eth{j + 1}", f"192.168.{j}.{host_number}", "30"))
-        host_number += 4
-        connection_port += 2 * (server_node_number + 1)
+            
        
     
 if __name__ == "__main__":
