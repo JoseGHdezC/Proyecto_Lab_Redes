@@ -40,18 +40,21 @@ from time import sleep
 #    except Exception as e:
 #        print("Error durante la configuración:", e)
 
+SERVER_TEMPLATE = "Network Automation"
+ROUTER_TEMPLATE = "FRR 8.2.2"
+
 def create_config_server(project, server) -> None:
     """
     Crea un nodo de configuración en el servidor Ansible.
     """
     server_name = "Servidor_Ansible"
-    server_node = Node(project_id=project.project_id, name=server_name, template="Network Automation",
+    server_node = Node(project_id=project.project_id, name=server_name, template=SERVER_TEMPLATE,
                 connector=server, x=0, y=0)
     server_node.create()
     server_node.update(name=server_name)
     
     switch_name = "manager_switch"
-    switch_node = Node(project_id=project.project_id, name=switch_name, template="FRR 8.2.2",
+    switch_node = Node(project_id=project.project_id, name=switch_name, template=ROUTER_TEMPLATE,
                 connector=server, x=0, y=50)
     switch_node.create()
     switch_node.update(name=switch_name)
@@ -75,7 +78,7 @@ def create_management_network(project, server) -> None:
         new_switch = Node(
             project_id=project.project_id,
             name=switch_name,
-            template="FRR 8.2.2",
+            template=ROUTER_TEMPLATE,
             connector=server,
             x=0,
             y=50 + (index * 100)  # apila verticalmente los switches
@@ -161,7 +164,7 @@ def main() -> None:
     spine_nodes = []
     for i in range(spine_node_number):
         name = f"spine_{i+1}"
-        node = Node(project_id=project.project_id, name=name, template="FRR 8.2.2",
+        node = Node(project_id=project.project_id, name=name, template=ROUTER_TEMPLATE,
                 connector=server, x=100 + (i * 100), y=100)
         node.create()
         node.update(name=name)
@@ -174,7 +177,7 @@ def main() -> None:
     server_nodes = []
     for i in range(leaf_node_number):
         name = f"leaf_{i+1}"
-        node = Node(project_id=project.project_id, name=name, template="FRR 8.2.2",
+        node = Node(project_id=project.project_id, name=name, template=ROUTER_TEMPLATE,
                 connector=server, x=200 + (i * 100), y=200)
         node.create()
         node.update(name=name)
@@ -183,7 +186,7 @@ def main() -> None:
         # Crear nodos servidor
         for j in range(server_node_number):
             server_name = f"server_{j + 1}"
-            server_node = Node(project_id=project.project_id, name=server_name, template="FRR 8.2.2",
+            server_node = Node(project_id=project.project_id, name=server_name, template=ROUTER_TEMPLATE,
                     connector=server, x=100 + (i * 100), y=300)
             server_node.create()
             server_node.update(name=server_name)
