@@ -110,7 +110,7 @@ def create_management_network(project, server) -> None:
         print(f"Enlace creado entre {management_node.name} (puerto {port_counter}) y {node_name}")
         port_counter += 1
 
-def create_link_between_nodes(project, server, node1, node2, port1, port2) -> None:
+def create_link_between_nodes(project, node1, node2, port1, port2) -> None:
     """
     Crea un enlace entre dos nodos en el proyecto.
     """
