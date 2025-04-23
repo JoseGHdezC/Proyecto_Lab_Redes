@@ -66,7 +66,7 @@ def create_management_network(project, server) -> None:
     conectándolos a switches de gestión. Si un switch se llena,
     se crea uno nuevo automáticamente.
     """
-    max_ports = 8  # Número máximo de puertos del switch
+    max_ports = 24  # Número máximo de puertos del switch
     switch_index = 1
     port_counter = 1
 
