@@ -1,8 +1,5 @@
 from gns3fy import Gns3Connector
 from gns3fy import Project, Node
-import telnetlib3
-import asyncio
-from time import sleep
 
 #async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
 #    """
