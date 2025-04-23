@@ -1,0 +1,52 @@
+- name: Configurar direcciones IP
+  hosts: spines
+  gather_facts: no
+  become: yes
+  become_method: su
+  become_user: root
+
+ 
+ 
+
+  tasks:
+    - name: Cargar la configuración de las interfaces del nodo
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "interface {{ item.key }}" \
+        vtysh -c "ip address {{ item.value }}" \
+        vtysh -c "ip ospf area 0" \ 
+        vtysh -c "exit" 
+    
+      loop: "{{ interfaces | dict2items }}"
+      when: interfaces is defined
+    - name: Activar OSPF
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router ospf"
+        vtysh -c "exit" 
+        
+    - name: Activar BGP
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor dc peer-group" \
+        vtysh -c "neighbor dc remote-as 65100" \
+        vtysh -c "neighbor dc update-source lo" \
+        vtysh -c "address-family l2vpn evpn" \
+        vtysh -c "neighbor dc route-reflector-client" \
+        vtysh -c "exit"
+        vtysh -c "exit" 
+    - name: Activar BGP
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor {{ item }} peer-group dc" \
+        vtysh -c "exit"
+        vtysh -c "exit"
+      with_items: "{{ neighbors }}"
+      when: neighbors is defined
+        
+    - name: "Guardar la configuración"
+      raw: |
+        vtysh -c "copy running-config startup-config"
+    
