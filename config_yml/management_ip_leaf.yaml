@@ -1,0 +1,39 @@
+- name: Limpiar la configuración del nodo y reconfigurar la interfaz de gestión.
+  hosts: leafs
+  gather_facts: no
+  become: yes
+  become_method: su
+  become_user: root
+
+ 
+ 
+
+  tasks:
+    - name: Mostrar la IP 
+      debug:
+        msg: "La dirección IP es {{ ansible_host }}"
+        
+    - name: "Limpiar la configuración existente"
+      raw: |
+        rm /etc/frr/frr.conf
+      ignore_errors: yes
+    
+    - name: "Reiniciar el servicio"
+      raw: |
+        /etc/init.d/frr restart
+
+    
+    - name: Cargar la configuración de la interfaz de gestión
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "interface eth0" \
+        vtysh -c "ip address {{ ansible_host }}/24" 
+        vtysh -c "exit" 
+    
+
+
+    - name: "Guardar la configuración"
+      raw: |
+        vtysh -c "copy running-config startup-config"
+    
+

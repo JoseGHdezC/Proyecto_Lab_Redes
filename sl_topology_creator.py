@@ -237,7 +237,8 @@ def main() -> None:
         node.start()
         print(f"Node {node.name} started.")
         
-    connection_port = 11
+    
+    connection_port = int(input("Ingrese el puerto de conexión inicial: "))
     host_ip_number = 2
     # Configure management network
     for i in range(spine_node_number):

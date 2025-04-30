@@ -43,3 +43,16 @@ $ chown -R 1000:1000 /ansible_data
 $ ssh-keygen -t rsa -n 2048
 $ ssh-copy-id manager@192.168.1.2
 ```
+5. Ejecutar archivos de configuración para configurar la red de gestión
+``` bash
+$ ansible-playbook -i hosts.yml management_ip_spine.yaml --ask-become-pass
+$ ansible-playbook -i hosts.yml management_ip_leaf.yaml --ask-become-pass
+```
+6. Ejecutar archivos de configuración para configurar nodos spine
+``` bash
+$ ansible-playbook -i hosts.yml spine_conf.yaml --ask-become-pass
+```
+7. Ejecutar archivos de configuración para configurar nodos leaf
+``` bash
+$ ansible-playbook -i hosts.yml leaf_conf.yaml --ask-become-pass
+```
