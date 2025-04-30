@@ -37,11 +37,11 @@
       raw: |
         vtysh -c "configure terminal" \
         vtysh -c "router bgp 65100" \
-        vtysh -c "neighbor leaf peer-group" \
-        vtysh -c "neighbor leaf remote-as 65100" \
-        vtysh -c "neighbor leaf update-source lo" \
+        vtysh -c "neighbor leafs peer-group" \
+        vtysh -c "neighbor leafs remote-as 65100" \
+        vtysh -c "neighbor leafs update-source lo" \
         vtysh -c "address-family l2vpn evpn" \
-        vtysh -c "neighbor leaf route-reflector-client" \
+        vtysh -c "neighbor leafs route-reflector-client" \
         vtysh -c "exit" \
         vtysh -c "exit"
 
