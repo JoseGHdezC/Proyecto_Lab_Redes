@@ -1,0 +1,64 @@
+- name: Configurar los servidores
+  hosts: servers
+  gather_facts: no
+  become: yes
+  become_method: su
+  become_user: root
+
+  tasks:
+    - name: Configurar IP del servidor
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "interface eth1" \
+        vtysh -c "ip address {{ server_net_ip }}/24" \
+        vtysh -c "exit" \
+        vtysh -c "ip route 0.0.0.0/0 {{ gateway }}"
+        vtysh -c "exit"  
+      when: server_net_ip is defined
+    
+    - name: Configurar BGP
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor leafs peer-group" \
+        vtysh -c "neighbor leafs remote-as 65100" \
+        vtysh -c "exit" \
+        vtysh -c "exit"  
+  
+    - name: Configurar vecinos leafs
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor {{ item }} peer-group leafs" \
+        vtysh -c "address-family l2vpn evpn" \
+        vtysh -c "neighbor leafs activate" \
+        vtysh -c "advertise-all-vni" \
+        vtysh -c "exit" \
+        vtysh -c "exit" \
+        vtysh -c "exit"
+      with_items: "{{ leafs }}"
+      when: leafs is defined
+      
+    - name: Crea una simulación de máquina virtual
+      raw: |
+        ip link add br0 type bridge
+        ip link set br0 up
+        ip link add vxlan100 type vxlan id 100 local {{ server_net_ip }}
+        ip link set vxlan100 up
+        ip link set vxlan100 master br0
+        ip link add veth1 type veth peer name veth_vm
+        ip link set veth1 master br0
+        ip link set veth1 up
+        ip netns add vm1
+        ip link set veth_vm up
+        ip link set veth_vm netns vm1
+        ip netns exec vm1 ip addr add {{ item }} dev veth_vm
+        ip netns exec vm1 ip link set veth_vm up
+      with_items: "{{ ips_vm }}"
+      when: ips_vm is defined
+         
+    - name: "Guardar la configuración"
+      raw: |
+        vtysh -c "copy running-config startup-config"
+    
+    
