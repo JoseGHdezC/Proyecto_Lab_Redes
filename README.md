@@ -56,3 +56,12 @@ $ ansible-playbook -i hosts.yml spine_conf.yaml --ask-become-pass
 ``` bash
 $ ansible-playbook -i hosts.yml leaf_conf.yaml --ask-become-pass
 ```
+
+## Crear Bridge en los leafs
+
+```bash
+ip link br0 type bridge
+ip link set br0
+ip link set eth3 master br0
+ip link set eth3 up
+```
