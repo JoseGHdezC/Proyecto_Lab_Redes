@@ -65,13 +65,13 @@
       with_items: "{{ server_neighbors }}"
       when: server_neighbors is defined
 
-    - name: Crear bridge br0
-      raw: |
-        ip link add br0 type bridge \
-        ip link set br0 up \
-        ip link set eth3 master br0 \
-        ip link set eth3 up
-
     - name: Guardar configuración
       raw: |
         vtysh -c "copy running-config startup-config"
+    
+    - name: Crear bridge br0
+      raw: |
+        ip link add br0 type bridge
+        ip link set br0 up 
+        ip link set eth3 master br0
+        ip link set eth3 up
