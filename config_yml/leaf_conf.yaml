@@ -32,6 +32,18 @@
         vtysh -c "address-family l2vpn evpn" \
         vtysh -c "exit" \
         vtysh -c "exit"
+    
+    - name: Configurar leaf peer-group
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor leaf peer-group" \
+        vtysh -c "neighbor leaf remote-as 65100" \
+        vtysh -c "neighbor leaf update-source lo" \
+        vtysh -c "address-family l2vpn evpn" \
+        vtysh -c "neighbor leaf route-reflector-client" \
+        vtysh -c "exit" \
+        vtysh -c "exit"
 
     - name: Configurar vecinos BGP (los spine)
       raw: |

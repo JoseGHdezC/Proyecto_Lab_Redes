@@ -1,13 +1,17 @@
 from gns3fy import Gns3Connector
 from gns3fy import Project, Node
-import telnetlib3
+#import telnetlib3
 import asyncio
 from time import sleep
 
+SERVER_TEMPLATE = "Network Automation"
+ROUTER_TEMPLATE = "FRR 8.2.2"
+
+"""
 async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
-    """
+    
     Conecta al router vía Telnet y configura la interfaz indicada.
-    """
+    
     try:
         reader, writer = await telnetlib3.open_connection(host, port)
 
@@ -38,9 +42,7 @@ async def configure_router(host, port, interface, ip_address, subnet_mask) -> No
         print(f"Configuración aplicada a {interface}: {ip_address} {subnet_mask}")
     except Exception as e:
         print("Error durante la configuración:", e)
-
-SERVER_TEMPLATE = "Network Automation"
-ROUTER_TEMPLATE = "FRR 8.2.2"
+"""
 
 def create_config_server(project, server) -> None:
     """
@@ -237,7 +239,7 @@ def main() -> None:
         node.start()
         print(f"Node {node.name} started.")
         
-    
+    """
     connection_port = int(input("Ingrese el puerto de conexión inicial: "))
     host_ip_number = 2
     # Configure management network
@@ -258,7 +260,7 @@ def main() -> None:
         asyncio.run(configure_router("localhost", 5000 + connection_port, "eth0", ip_address, subnet_mask))
         host_ip_number += 1
         connection_port += 2 * server_node_number
-    
+    """
        
     
 if __name__ == "__main__":
