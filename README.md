@@ -15,10 +15,18 @@ En primer lugar tenemos que obtener los templates de NetworkAutomation y FRR8.2.
 
 ### FRR 8.2.2
 1. Cambiar en la pestaña Network del template el número de puertos
+2. Añadir usuario manager al dispositivo
+   1. `adduser manager`
+3. Asignar ip de gestión
+   1. Volátil: 
+   ``` bash
+   #> ip addr add {ip}/{netmask} dev {interface}
+   #> ip link set {interface} up
+   ```
 
 ### NetworkAutomation
 1. Añadir a la configuración de NetworkAutomation:
-```
+``` bash
 auto eth0
 iface eth0 inet static
 	address 192.168.1.1
@@ -29,8 +37,8 @@ iface eth0 inet static
 ``` bash
 $ chown -R 1000:1000 /ansible_data
 ```
-1. Incluir ficheros .yml en /ansible_data
-2. Crear clave ssh
+3. Incluir ficheros .yml en /ansible_data
+4. Crear clave ssh
 ``` bash
 $ ssh-keygen -t rsa -n 2048
 $ ssh-copy-id manager@192.168.1.2

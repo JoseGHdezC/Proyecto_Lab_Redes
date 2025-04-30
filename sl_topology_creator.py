@@ -1,41 +1,43 @@
 from gns3fy import Gns3Connector
 from gns3fy import Project, Node
+import telnetlib3
+import asyncio
+from time import sleep
 
-#async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
-#    """
-#    Conecta al router vía Telnet y configura la interfaz indicada.
-#    """
-#    try:
-#        reader, writer = await telnetlib3.open_connection(host, port)
-#        # Enviar comandos al router
-#        writer.write("vtysh\n")
-#        await writer.drain()
-#        writer.write("configure terminal\n")
-#        await writer.drain()
-#        writer.write(f"interface {interface}\n")
-#        await writer.drain()
-#        writer.write(f"ip address {ip_address}/{subnet_mask}\n")
-#        await writer.drain()
-#        writer.write("exit\n")
-#        await writer.drain()
-#        writer.write("exit\n")
-#        await writer.drain()
-#        writer.write("write\n")
-#        await writer.drain()
-#        writer.write("exit\n")
-#        await writer.drain()
-#            
-#        # Leer la respuesta para confirmar que se aplicó la configuración
-#        response = await reader.read(1024)
-#        print("Respuesta recibida:", response)
-#        
-#        # Close the connection when done
-#        writer.close()
-#        sleep(1)#
+async def configure_router(host, port, interface, ip_address, subnet_mask) -> None:
+    """
+    Conecta al router vía Telnet y configura la interfaz indicada.
+    """
+    try:
+        reader, writer = await telnetlib3.open_connection(host, port)
 
-#        print(f"Configuración aplicada a {interface}: {ip_address} {subnet_mask}")
-#    except Exception as e:
-#        print("Error durante la configuración:", e)
+        await reader.readuntil("frr#")
+
+        # Enviar comandos al router
+        writer.write("exit\n")
+        await writer.drain()
+        writer.write(f"ip addr add {ip_address}/{subnet_mask} dev {interface}\n")
+        await writer.drain()
+        writer.write(f"ip link set {interface} up\n")
+        await writer.drain()
+        writer.write(f"adduser manager\n")
+        await writer.drain()
+        writer.write("manager\n")
+        await writer.drain()
+        writer.write("manager\n")
+        await writer.drain()
+            
+        # Leer la respuesta para confirmar que se aplicó la configuración
+        response = await reader.read(1024)
+        print("Respuesta recibida:", response)
+        
+        # Close the connection when done
+        writer.close()
+        sleep(1)#
+        
+        print(f"Configuración aplicada a {interface}: {ip_address} {subnet_mask}")
+    except Exception as e:
+        print("Error durante la configuración:", e)
 
 SERVER_TEMPLATE = "Network Automation"
 ROUTER_TEMPLATE = "FRR 8.2.2"
@@ -230,6 +232,32 @@ def main() -> None:
             except Exception as e:
                 print(f"Error al crear el enlace entre {leaf_name} y {server_name}: {e}")
             
+    # Start all nodes
+    for node in project.nodes:
+        node.start()
+        print(f"Node {node.name} started.")
+        
+    connection_port = 11
+    host_ip_number = 2
+    # Configure management network
+    for i in range(spine_node_number):
+        spine_name = f"spine_{i + 1}"
+        spine_node = project.get_node(name=spine_name)
+        ip_address = f"192.168.1.{host_ip_number}"
+        subnet_mask = "24"
+        asyncio.run(configure_router("localhost", 5000 + connection_port, "eth0", ip_address, subnet_mask))
+        host_ip_number += 1
+        connection_port += 2
+        
+    for i in range(leaf_node_number):
+        leaf_name = f"leaf_{i + 1}"
+        leaf_node = project.get_node(name=leaf_name)
+        ip_address = f"192.168.1.{host_ip_number}"
+        subnet_mask = "24"
+        asyncio.run(configure_router("localhost", 5000 + connection_port, "eth0", ip_address, subnet_mask))
+        host_ip_number += 1
+        connection_port += 2 * server_node_number
+    
        
     
 if __name__ == "__main__":
