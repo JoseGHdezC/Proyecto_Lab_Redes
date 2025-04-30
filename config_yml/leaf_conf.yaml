@@ -55,6 +55,16 @@
       with_items: "{{ neighbors }}"
       when: neighbors is defined
 
+    - name: Configurar vecinos BGP (los leafs)
+      raw: |
+        vtysh -c "configure terminal" \
+        vtysh -c "router bgp 65100" \
+        vtysh -c "neighbor {{ item }} peer-group leafs"\
+        vtysh -c "exit" \
+        vtysh -c "exit"
+      with_items: "{{ server_neighbors }}"
+      when: server_neighbors is defined
+
     - name: Guardar configuración
       raw: |
         vtysh -c "copy running-config startup-config"
