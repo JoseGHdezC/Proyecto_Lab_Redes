@@ -1,8 +1,8 @@
 from gns3fy import Gns3Connector
 from gns3fy import Project, Node
 #import telnetlib3
-import asyncio
-from time import sleep
+#import asyncio
+#from time import sleep
 
 SERVER_TEMPLATE = "Network Automation"
 ROUTER_TEMPLATE = "FRR 8.2.2"
@@ -261,7 +261,6 @@ def main() -> None:
         host_ip_number += 1
         connection_port += 2 * server_node_number
     """
-       
     
 if __name__ == "__main__":
     main()
