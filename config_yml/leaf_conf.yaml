@@ -37,6 +37,7 @@
         vtysh -c "neighbor dc remote-as 65100" \
         vtysh -c "neighbor dc update-source lo" \
         vtysh -c "address-family l2vpn evpn" \
+        vtysh -c "neighbor dc activate" \
         vtysh -c "exit" \
         vtysh -c "exit"
     
@@ -48,6 +49,7 @@
         vtysh -c "neighbor leafs remote-as 65100" \
         vtysh -c "neighbor leafs update-source lo" \
         vtysh -c "address-family l2vpn evpn" \
+        vtysh -c "neighbor leafs activate" \
         vtysh -c "neighbor leafs route-reflector-client" \
         vtysh -c "exit" \
         vtysh -c "exit"
